@@ -65,6 +65,9 @@ class IdentifierToken(Token):
     def depth(self) -> int:
         pass
 
+    def __repr__(self):
+        return f"<D{self.depth()} {self.token_type}, {self.lexeme}>"
+
 
 class Depth1IdentifierToken(IdentifierToken):
     def depth(self) -> int:

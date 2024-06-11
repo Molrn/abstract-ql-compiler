@@ -1,22 +1,37 @@
 from abc import abstractmethod, ABC
 from typing import Generic, TypeVar, List
-from anytree import Node
+from anytree import Node, RenderTree
 
-import tokens
-from parser import StatementType
+from . import tokens
+from .lexer import Lexer
+from .parser import StatementType, Parser
 
 T = TypeVar('T')
 
 
 class Compiler(ABC, Generic[T]):
-    def __init__(self, syntax_tree: Node):
-        self.syntax_tree = syntax_tree
 
-    def run(self):
-        if self.syntax_tree.name == StatementType.SELECT:
+    def run(self, statement: str, verbose: bool = False):
+        if verbose:
+            print(f"\nSTATEMENT\n\n{statement}")
+        token_list = Lexer(statement).run()
+        if verbose:
+            print(f"\nTOKENS\n\n{' '.join([str(token) for token in token_list])}")
+        syntax_tree = Parser(token_list).run()
+        if verbose:
+            print(f"\nSYNTAX TREE\n")
+            for pre, _, node in RenderTree(syntax_tree):
+                print("%s%s" % (pre, node.name))
+        results = self.execute_statement(syntax_tree)
+        if verbose:
+            print(f"\nRESULTS\n\n{results}")
+        return results
+
+    def execute_statement(self, statement_node: Node):
+        if statement_node.name == StatementType.SELECT:
             from_node = None
             select_node = None
-            for node in self.syntax_tree.children:
+            for node in statement_node.children:
                 token = node.name
                 if isinstance(token, tokens.SelectToken):
                     select_node = node
@@ -24,9 +39,9 @@ class Compiler(ABC, Generic[T]):
                     from_node = node
             if not select_node or not from_node:
                 raise ValueError()
-            return self.run_select(select_node, from_node)
+            return self.execute_select_statement(select_node, from_node)
 
-    def run_select(self, select_node: Node, from_node: Node) -> T:
+    def execute_select_statement(self, select_node: Node, from_node: Node) -> T:
         token = from_node.children[0].name
         if not isinstance(token, tokens.IdentifierToken):
             raise ValueError()

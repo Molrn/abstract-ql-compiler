@@ -1,8 +1,8 @@
 from typing import List, Type
 
-import tokens
-from exceptions import LexicalError
-from tokens import Token
+from . import tokens
+from .exceptions import LexicalError
+from .tokens import Token
 
 
 class Lexer:

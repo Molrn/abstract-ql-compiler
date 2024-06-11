@@ -1,9 +1,9 @@
 from enum import StrEnum
-from typing import List, Type, Tuple
-
-import tokens
-from tokens import Token
+from typing import List, Type
 from anytree import Node
+
+from . import tokens
+from .tokens import Token
 
 
 class StatementType(StrEnum):

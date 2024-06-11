@@ -1,10 +1,12 @@
-from anytree import RenderTree
+import argparse
+from dict_compiler import DictCompiler
 
-from lexer import Lexer
-from parser import Parser
 
 if __name__ == "__main__":
-    tokens = Lexer('SELECT "column1" "column2" FROM "schema"."table"').run()
-    syntax_tree = Parser(tokens).run()
-    for pre, _, node in RenderTree(syntax_tree):
-        print("%s%s" % (pre, node.name))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("statement", type=str)
+    parser.add_argument("--verbose", action="store_true")
+    args = parser.parse_args()
+    results = DictCompiler().run(args.statement, args.verbose)
+    if not args.verbose:
+        print(results)
