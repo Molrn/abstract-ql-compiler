@@ -23,7 +23,7 @@ python main.py [-h] [--verbose] statement
 ```
 Example:
 ```
-python main.py 'SELECT \"column2\" FROM \"schema1\".\"table1\"' --verbose
+python main.py 'SELECT "column2" FROM "schema1"."table1"' --verbose
 ```
 
 ## How it works   
@@ -38,7 +38,7 @@ The abstract compiler is made of a [lexer](abstract_compiler/lexer.py) and a
 [parser](abstract_compiler/parser.py). As semantic analysis and code generation
 depend on the data structure at use, it has to be specifically defined for each
 one. To do so, the abstract methods of the generic class 
-[Compiler](abstract_compiler/compiler.py) has to be overridden. The class 
+[AbstractCompiler](abstract_compiler/compiler.py) has to be overridden. The class 
 [DictCompiler](dict_compiler/compiler.py) is an example of that implementation.
 
 ### Example

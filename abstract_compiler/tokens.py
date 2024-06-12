@@ -1,7 +1,6 @@
 import re
 from abc import ABC, abstractmethod
 from enum import StrEnum
-from typing import List
 
 
 class TokenType(StrEnum):
@@ -12,12 +11,15 @@ class TokenType(StrEnum):
 
 
 class Token(ABC):
-    def __init__(self, lexeme: str, token_type: TokenType = TokenType.UNDEFINED):
+    def __init__(
+            self, lexeme: str, token_type: TokenType = TokenType.UNDEFINED
+    ):
         self.token_type = token_type
         regex = self.regular_expression()
         if not re.fullmatch(regex, lexeme):
             raise ValueError(
-                f"Lexeme '{lexeme}' does not match regular expression '{regex}'"
+                f"Lexeme '{lexeme}' does not match "
+                f"regular expression '{regex}'"
             )
         self.lexeme = lexeme
 
@@ -58,7 +60,7 @@ class IdentifierToken(Token):
     def regular_expression(self) -> str:
         return "\\.".join(['"[^"]*"'] * self.depth())
 
-    def get_values(self) -> List[str]:
+    def get_values(self) -> list[str]:
         return self.lexeme[1:-1].split('"."')
 
     @abstractmethod

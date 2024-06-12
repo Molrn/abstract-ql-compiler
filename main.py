@@ -7,6 +7,7 @@ if __name__ == "__main__":
     parser.add_argument("statement", type=str)
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
-    results = DictCompiler().run(args.statement, args.verbose)
+    compiler = DictCompiler()
+    results = compiler.run(args.statement, args.verbose)
     if not args.verbose:
-        print(results)
+        compiler.display_results(results)

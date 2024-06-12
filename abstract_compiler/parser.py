@@ -1,8 +1,8 @@
 from enum import StrEnum
-from typing import List, Type
 from anytree import Node
 
 from . import tokens
+from .exceptions import SyntacticError
 from .tokens import Token
 
 
@@ -11,45 +11,47 @@ class StatementType(StrEnum):
 
 
 class Parser:
-    def __init__(self, token_list: List[Token]):
+    def __init__(self, token_list: list[Token]):
         self.tokens = token_list
 
-    def get_current_token(self) -> Token:
+    def run(self) -> Node:
+        return self._statement()
+
+    def _get_current_token(self) -> Token:
         if len(self.tokens) == 0:
-            raise SyntaxError("Unexpected end of tokens")
+            raise SyntacticError("Unexpected end of tokens")
         return self.tokens[0]
 
-    def consume_token(self, token_class: Type[Token]) -> Token:
-        token = self.get_current_token()
+    def _consume_token(self, token_class: type[Token]) -> Token:
+        token = self._get_current_token()
         if isinstance(token, token_class):
             return self.tokens.pop(0)
         else:
-            raise SyntaxError(f"Unexpected token: {token.lexeme}")
+            raise SyntacticError(f"Unexpected token: {token.lexeme}")
 
-    def run(self) -> Node:
-        return self.statement()
-
-    def statement(self) -> Node:
-        if isinstance(self.get_current_token(), tokens.SelectToken):
+    def _statement(self) -> Node:
+        if isinstance(self._get_current_token(), tokens.SelectToken):
             return Node(
-                StatementType.SELECT, children=self.select_statement()
+                StatementType.SELECT, children=self._select_statement()
             )
 
-    def select_statement(self) -> List[Node]:
-        select_node = Node(self.consume_token(tokens.SelectToken))
-        select_node.children = self.column_list()
-        from_node = Node(self.consume_token(tokens.FromToken))
+    def _select_statement(self) -> list[Node]:
+        select_node = Node(self._consume_token(tokens.SelectToken))
+        select_node.children = self._column_list()
+        from_node = Node(self._consume_token(tokens.FromToken))
         from_node.children = [self.table()]
         return [select_node, from_node]
 
-    def column_list(self) -> List[Node]:
-        columns = [self.column()]
-        while isinstance(self.get_current_token(), tokens.Depth1IdentifierToken):
-            columns.append(self.column())
+    def _column_list(self) -> list[Node]:
+        columns = [self._column()]
+        while isinstance(
+                self._get_current_token(), tokens.Depth1IdentifierToken
+        ):
+            columns.append(self._column())
         return columns
 
-    def column(self) -> Node:
-        return Node(self.consume_token(tokens.Depth1IdentifierToken))
+    def _column(self) -> Node:
+        return Node(self._consume_token(tokens.Depth1IdentifierToken))
 
-    def table(self) -> Node:
-        return Node(self.consume_token(tokens.IdentifierToken))
+    def _table(self) -> Node:
+        return Node(self._consume_token(tokens.IdentifierToken))

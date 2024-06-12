@@ -1,5 +1,7 @@
 from abc import abstractmethod, ABC
-from typing import Generic, TypeVar, List
+from sys import stdout, stderr
+from typing import Generic, TypeVar
+
 from anytree import Node, RenderTree
 
 from . import tokens
@@ -9,29 +11,42 @@ from .parser import StatementType, Parser
 T = TypeVar('T')
 
 
-class Compiler(ABC, Generic[T]):
+class AbstractCompiler(ABC, Generic[T]):
 
-    def run(self, statement: str, verbose: bool = False):
-        if verbose:
-            print(f"\nSTATEMENT\n\n{statement}")
-        token_list = Lexer(statement).run()
-        if verbose:
-            print(f"\nTOKENS\n\n{' '.join([str(token) for token in token_list])}")
-        syntax_tree = Parser(token_list).run()
-        if verbose:
-            print(f"\nSYNTAX TREE\n")
-            for pre, _, node in RenderTree(syntax_tree):
-                print("%s%s" % (pre, node.name))
-        results = self.execute_statement(syntax_tree)
-        if verbose:
-            print(f"\nRESULTS\n\n{results}")
-        return results
+    def __init__(self, output_stream=stdout, error_stream=stderr):
+        self.output_stream = output_stream
+        self.error_stream = error_stream
 
-    def execute_statement(self, statement_node: Node):
-        if statement_node.name == StatementType.SELECT:
+    def execute(self, statement: str, verbose: bool = False):
+        from abstract_compiler.exceptions import CompilationError
+        try:
+            if verbose:
+                self.output_stream.write(f"STATEMENT\n\n{statement}\n\n")
+            token_list = Lexer(statement).run()
+            if verbose:
+                token_str_list = ' '.join(
+                    [str(token) for token in token_list]
+                )
+                self.output_stream.write(f"\n\nTOKENS\n\n{token_str_list}\n\n")
+            syntax_tree = Parser(token_list).run()
+            if verbose:
+                self.output_stream.write("SYNTAX TREE\n\n")
+                for pre, _, node in RenderTree(syntax_tree):
+                    self.output_stream.write("%s%s\n" % (pre, node.name))
+                self.output_stream.write("\n")
+            results = self._execute_statement(syntax_tree)
+            if verbose:
+                self.output_stream.write("RESULTS\n\n")
+                self.display_results(results)
+            return results
+        except CompilationError as e:
+            self.error_stream.write(f"{e}\n")
+
+    def _execute_statement(self, statement_root: Node):
+        if statement_root.name == StatementType.SELECT:
             from_node = None
             select_node = None
-            for node in statement_node.children:
+            for node in statement_root.children:
                 token = node.name
                 if isinstance(token, tokens.SelectToken):
                     select_node = node
@@ -39,9 +54,9 @@ class Compiler(ABC, Generic[T]):
                     from_node = node
             if not select_node or not from_node:
                 raise ValueError()
-            return self.execute_select_statement(select_node, from_node)
+            return self._execute_select_statement(select_node, from_node)
 
-    def execute_select_statement(self, select_node: Node, from_node: Node) -> T:
+    def _execute_select_statement(self, select_node: Node, from_node: Node) -> T:
         token = from_node.children[0].name
         if not isinstance(token, tokens.IdentifierToken):
             raise ValueError()
@@ -68,6 +83,10 @@ class Compiler(ABC, Generic[T]):
         return self.select_columns_from_table(table, columns)
 
     @abstractmethod
+    def display_results(self, results: T):
+        pass
+
+    @abstractmethod
     def get_table_from_1_id(self, identifier: str) -> T:
         pass
 
@@ -82,5 +101,5 @@ class Compiler(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def select_columns_from_table(self, table: T, columns: List[str]) -> T:
+    def select_columns_from_table(self, table: T, columns: list[str]) -> T:
         pass

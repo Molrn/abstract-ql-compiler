@@ -1,15 +1,20 @@
 import json
-from typing import List
 
-from abstract_compiler import Compiler
+from abstract_compiler import AbstractCompiler
 from abstract_compiler.exceptions import SemanticError
 
 
-class DictCompiler(Compiler[dict]):
+class DictCompiler(AbstractCompiler[dict]):
 
-    def __init__(self, data_file_path: str = "dict_compiler/data.json"):
+    def __init__(
+        self, data_file_path: str = "dict_compiler/data.json", *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
         with open(data_file_path) as file:
             self.data: dict = json.load(file)
+
+    def display_results(self, results: dict):
+        self.output_stream.write(f"{str(results)}\n")
 
     def get_table_from_1_id(self, identifier: str) -> dict:
         schema_databases = []
@@ -62,7 +67,7 @@ class DictCompiler(Compiler[dict]):
             )
         return self.data[left_id][middle_id][right_id]
 
-    def select_columns_from_table(self, table: dict, columns: List[str]) -> dict:
+    def select_columns_from_table(self, table: dict, columns: list[str]) -> dict:
         selected = []
         for record in table:
             row = {}
@@ -72,4 +77,3 @@ class DictCompiler(Compiler[dict]):
                 row[column] = record[column]
             selected.append(row)
         return selected
-

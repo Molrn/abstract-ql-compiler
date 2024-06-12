@@ -1,10 +1,19 @@
-class LexicalError(Exception):
+
+class CompilationError(Exception):
     pass
 
 
-class SemanticError(Exception):
+class SyntacticError(CompilationError):
     pass
 
 
-class LogicalError(Exception):
+class LexicalError(CompilationError):
+    pass
+
+
+class SemanticError(CompilationError):
+    pass
+
+
+class LogicalError(CompilationError):
     pass
