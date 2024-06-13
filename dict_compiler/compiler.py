@@ -4,7 +4,7 @@ from abstract_compiler import AbstractCompiler
 from abstract_compiler.exceptions import SemanticError
 
 
-class DictCompiler(AbstractCompiler[dict]):
+class DictCompiler(AbstractCompiler[tuple[str, str, str], list[dict]]):
 
     def __init__(
         self, data_file_path: str = "dict_compiler/data.json", *args, **kwargs
@@ -13,10 +13,10 @@ class DictCompiler(AbstractCompiler[dict]):
         with open(data_file_path) as file:
             self.data: dict = json.load(file)
 
-    def display_results(self, results: dict):
+    def display_results(self, results):
         self.output_stream.write(f"{str(results)}\n")
 
-    def get_table_from_1_id(self, identifier: str) -> dict:
+    def get_table_from_1_id(self, identifier: str):
         schema_databases = []
         for database in self.data.keys():
             for schema in self.data[database].keys():
@@ -30,9 +30,9 @@ class DictCompiler(AbstractCompiler[dict]):
                 "Schema name must be provided"
             )
         (database, schema) = schema_databases[0]
-        return self.data[database][schema][identifier]
+        return database, schema, identifier
 
-    def get_table_from_2_ids(self, left_id: str, right_id: str) -> dict:
+    def get_table_from_2_ids(self, left_id: str, right_id: str):
         databases = []
         for database in self.data.keys():
             if left_id in self.data[database].keys():
@@ -49,11 +49,11 @@ class DictCompiler(AbstractCompiler[dict]):
             raise SemanticError(
                 f"Unknown table '{right_id}' in schema '{left_id}'"
             )
-        return schema[right_id]
+        return databases[0], left_id, right_id
 
     def get_table_from_3_ids(
             self, left_id: str, middle_id: str, right_id: str
-    ) -> dict:
+    ):
         if left_id not in self.data.keys():
             raise SemanticError(f"Unknown database '{left_id}'")
         if middle_id not in self.data[left_id].keys():
@@ -65,11 +65,13 @@ class DictCompiler(AbstractCompiler[dict]):
                 f"Unknown table '{right_id}' in schema "
                 f"'{middle_id}' of database '{left_id}'"
             )
-        return self.data[left_id][middle_id][right_id]
+        return left_id, middle_id, right_id
 
-    def select_columns_from_table(self, table: dict, columns: list[str]) -> dict:
+    def select_columns_from_table(self, table, columns: list[str]):
+        (database, schema, table_name) = table
+        table_content = self.data[database][schema][table_name]
         selected = []
-        for record in table:
+        for record in table_content:
             row = {}
             for column in columns:
                 if column not in record.keys():

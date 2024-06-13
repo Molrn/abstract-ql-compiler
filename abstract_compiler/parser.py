@@ -39,7 +39,7 @@ class Parser:
         select_node = Node(self._consume_token(tokens.SelectToken))
         select_node.children = self._column_list()
         from_node = Node(self._consume_token(tokens.FromToken))
-        from_node.children = [self.table()]
+        from_node.children = [self._table()]
         return [select_node, from_node]
 
     def _column_list(self) -> list[Node]:
