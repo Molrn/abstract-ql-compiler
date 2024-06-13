@@ -22,7 +22,7 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
         self.error_stream = error_stream
         self.verbose = verbose
 
-    def execute(self, statement: str):
+    def execute(self, statement: str) -> Result:
         try:
             if self.verbose:
                 self.output_stream.write(f"STATEMENT\n\n{statement}\n\n")
@@ -31,7 +31,7 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
                 token_str_list = ' '.join(
                     [str(token) for token in token_list]
                 )
-                self.output_stream.write(f"\n\nTOKENS\n\n{token_str_list}\n\n")
+                self.output_stream.write(f"TOKENS\n\n{token_str_list}\n\n")
             syntax_tree = Parser(token_list).run()
             if self.verbose:
                 self.output_stream.write("SYNTAX TREE\n\n")
@@ -46,7 +46,7 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
         except CompilationError as e:
             self.error_stream.write(f"{e}\n")
 
-    def _execute_statement(self, statement_root: Node):
+    def _execute_statement(self, statement_root: Node) -> Result:
         if statement_root.name == StatementType.SELECT:
             from_node = None
             select_node = None
