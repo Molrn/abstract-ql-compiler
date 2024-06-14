@@ -6,8 +6,9 @@ from .exceptions import SyntacticError
 from .tokens import Token
 
 
-class StatementType(StrEnum):
+class ComposedNodeType(StrEnum):
     SELECT = "SELECT"
+    TABLE_IDENTIFIER = "TABLE IDENTIFIER"
 
 
 class Parser:
@@ -17,13 +18,15 @@ class Parser:
     def run(self) -> Node:
         return self._statement()
 
-    def _get_current_token(self) -> Token:
+    def _get_current_token(self) -> Token | None:
         if len(self.tokens) == 0:
-            raise SyntacticError("Unexpected end of tokens")
+            return None
         return self.tokens[0]
 
     def _consume_token(self, token_class: type[Token]) -> Token:
         token = self._get_current_token()
+        if token is None:
+            raise SyntacticError("Unexpected end of tokens")
         if isinstance(token, token_class):
             return self.tokens.pop(0)
         else:
@@ -32,7 +35,7 @@ class Parser:
     def _statement(self) -> Node:
         if isinstance(self._get_current_token(), tokens.SelectToken):
             return Node(
-                StatementType.SELECT, children=self._select_statement()
+                ComposedNodeType.SELECT, children=self._select_statement()
             )
 
     def _select_statement(self) -> list[Node]:
@@ -45,13 +48,21 @@ class Parser:
     def _column_list(self) -> list[Node]:
         columns = [self._column()]
         while isinstance(
-                self._get_current_token(), tokens.Depth1IdentifierToken
+            self._get_current_token(), tokens.IdentifierToken
         ):
             columns.append(self._column())
         return columns
 
     def _column(self) -> Node:
-        return Node(self._consume_token(tokens.Depth1IdentifierToken))
+        return Node(self._consume_token(tokens.IdentifierToken))
 
     def _table(self) -> Node:
-        return Node(self._consume_token(tokens.IdentifierToken))
+        table = Node(ComposedNodeType.TABLE_IDENTIFIER)
+        Node(self._consume_token(tokens.IdentifierToken), parent=table)
+        if isinstance(self._get_current_token(), tokens.DotToken):
+            Node(self._consume_token(tokens.DotToken), parent=table)
+            Node(self._consume_token(tokens.IdentifierToken), parent=table)
+        if isinstance(self._get_current_token(), tokens.DotToken):
+            Node(self._consume_token(tokens.DotToken), parent=table)
+            Node(self._consume_token(tokens.IdentifierToken), parent=table)
+        return table

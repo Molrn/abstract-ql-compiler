@@ -82,20 +82,18 @@ Clauses:
 
 ### Token table
 
-| Token  | Regular expression             |
-|--------|--------------------------------|
-| SELECT | case_insensitive(SELECT)       |
-| FROM   | case_insensitive(FROM)         |
-| D1 ID  | "[^"]\*"                       |
-| D2 ID  | "[^"]\*"\\."[^"]\*"            |
-| D3 ID  | "[^"]\*"\\."[^"]\*"\\."[^"]\*" |
+| Token  | Regular expression       |
+|--------|--------------------------|
+| SELECT | case_insensitive(SELECT) |
+| FROM   | case_insensitive(FROM)   |
+| ID     | "[^"]\*"                 |
+| DOT    | \\.                      |
 
 ### Grammar
 ```
 statement           ::= select_statement
 select_statement    ::= <SELECT> column_list <FROM> table 
-column_list         ::= column column_list | column
-column              ::= <D1 ID>
-table               ::= <D1 ID> | <D2 ID> | <D3 ID>
+column_list         ::= <ID> column_list | <ID>
+table               ::= <ID> | <ID> <DOT> <ID> | <ID> <DOT> <ID> <DOT> <ID>
 ```
 

@@ -7,6 +7,7 @@ class TokenType(StrEnum):
     SELECT = "SELECT"
     FROM = "FROM"
     ID = "ID"
+    DOT = "DOT"
     UNDEFINED = "UNDEFINED"
 
 
@@ -58,29 +59,18 @@ class IdentifierToken(Token):
         super().__init__(lexeme, TokenType.ID)
 
     def regular_expression(self) -> str:
-        return "\\.".join(['"[^"]*"'] * self.depth())
+        return '"[^"]*"'
 
-    def get_values(self) -> list[str]:
-        return self.lexeme[1:-1].split('"."')
+    def get_value(self) -> str:
+        return self.lexeme[1:-1]
 
-    @abstractmethod
-    def depth(self) -> int:
-        pass
+
+class DotToken(Token):
+    def __init__(self, lexeme):
+        super().__init__(lexeme, TokenType.DOT)
+
+    def regular_expression(self) -> str:
+        return "\\."
 
     def __repr__(self):
-        return f"<D{self.depth()} {self.token_type}, {self.lexeme}>"
-
-
-class Depth1IdentifierToken(IdentifierToken):
-    def depth(self) -> int:
-        return 1
-
-
-class Depth2IdentifierToken(IdentifierToken):
-    def depth(self) -> int:
-        return 2
-
-
-class Depth3IdentifierToken(IdentifierToken):
-    def depth(self) -> int:
-        return 3
+        return f"<{self.token_type}>"

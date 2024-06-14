@@ -5,9 +5,9 @@ from typing import Generic, TypeVar
 from anytree import Node, RenderTree
 
 from . import tokens
-from .exceptions import CompilationError
+from .exceptions import CompilationError, LogicalError
 from .lexer import Lexer
-from .parser import StatementType, Parser
+from .parser import ComposedNodeType, Parser
 
 Table = TypeVar("Table")
 Result = TypeVar("Result")
@@ -47,7 +47,7 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
             self.error_stream.write(f"{e}\n")
 
     def _execute_statement(self, statement_root: Node) -> Result:
-        if statement_root.name == StatementType.SELECT:
+        if statement_root.name == ComposedNodeType.SELECT:
             from_node = None
             select_node = None
             for node in statement_root.children:
@@ -57,36 +57,44 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
                 elif isinstance(token, tokens.FromToken):
                     from_node = node
             if not select_node or not from_node:
-                raise ValueError()
+                raise LogicalError(
+                    "SELECT and FROM tokens expected in Select Statement"
+                )
             return self._execute_select_statement(select_node, from_node)
 
     def _execute_select_statement(self, select_node: Node, from_node: Node) -> Result:
-        token = from_node.children[0].name
-        table = self._get_table_id_from_token(token)
+        table_id_node = from_node.children[0]
+        if table_id_node.name != ComposedNodeType.TABLE_IDENTIFIER:
+            raise LogicalError("Table identifier enpected in FROM clause")
+        table = self._get_table_id_from_node(table_id_node)
         columns = []
         for node in select_node.children:
             token = node.name
-            if not isinstance(token, tokens.Depth1IdentifierToken):
-                raise ValueError()
-            columns.append(token.get_values()[0])
+            if not isinstance(token, tokens.IdentifierToken):
+                raise LogicalError("Identifier token expected in columns")
+            columns.append(token.get_value())
         return self.select_columns_from_table(table, columns)
 
-    def _get_table_id_from_token(
-        self, identifier: tokens.IdentifierToken
-    ) -> Table:
-        id_values = identifier.get_values()
-        if isinstance(identifier, tokens.Depth1IdentifierToken):
+    def _get_table_id_from_node(self, table_id_node: Node) -> Table:
+        id_values = []
+        for child in table_id_node.children:
+            token = child.name
+            if isinstance(token, tokens.IdentifierToken):
+                id_values.append(token.get_value())
+
+        id_count = len(id_values)
+        if id_count == 1:
             return self.get_table_from_1_id(id_values[0])
-        elif isinstance(identifier, tokens.Depth2IdentifierToken):
+        elif id_count == 2:
             return self.get_table_from_2_ids(
                 id_values[0], id_values[1]
             )
-        elif isinstance(identifier, tokens.Depth3IdentifierToken):
+        elif id_count == 3:
             return self.get_table_from_3_ids(
                 id_values[0], id_values[1], id_values[2]
             )
         else:
-            raise ValueError(f"Unknown identifier token {identifier}")
+            raise LogicalError(f"Unrecognized table identifier")
 
     @abstractmethod
     def display_results(self, results: Result):
