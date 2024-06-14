@@ -1,5 +1,5 @@
-from abc import abstractmethod, ABC
-from sys import stdout, stderr
+from abc import ABC, abstractmethod
+from sys import stderr, stdout
 from typing import Generic, TypeVar
 
 from anytree import Node, RenderTree
@@ -14,7 +14,6 @@ Result = TypeVar("Result")
 
 
 class AbstractCompiler(ABC, Generic[Table, Result]):
-
     def __init__(
         self, output_stream=stdout, error_stream=stderr, verbose=True
     ):
@@ -28,9 +27,7 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
                 self.output_stream.write(f"STATEMENT\n\n{statement}\n\n")
             token_list = Lexer(statement).run()
             if self.verbose:
-                token_str_list = ' '.join(
-                    [str(token) for token in token_list]
-                )
+                token_str_list = " ".join([str(token) for token in token_list])
                 self.output_stream.write(f"TOKENS\n\n{token_str_list}\n\n")
             syntax_tree = Parser(token_list).run()
             if self.verbose:
@@ -62,7 +59,9 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
                 )
             return self._execute_select_statement(select_node, from_node)
 
-    def _execute_select_statement(self, select_node: Node, from_node: Node) -> Result:
+    def _execute_select_statement(
+        self, select_node: Node, from_node: Node
+    ) -> Result:
         table_id_node = from_node.children[0]
         if table_id_node.name != ComposedNodeType.TABLE_IDENTIFIER:
             raise LogicalError("Table identifier enpected in FROM clause")
@@ -86,15 +85,13 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
         if id_count == 1:
             return self.get_table_from_1_id(id_values[0])
         elif id_count == 2:
-            return self.get_table_from_2_ids(
-                id_values[0], id_values[1]
-            )
+            return self.get_table_from_2_ids(id_values[0], id_values[1])
         elif id_count == 3:
             return self.get_table_from_3_ids(
                 id_values[0], id_values[1], id_values[2]
             )
         else:
-            raise LogicalError(f"Unrecognized table identifier")
+            raise LogicalError("Unrecognized table identifier")
 
     @abstractmethod
     def display_results(self, results: Result):

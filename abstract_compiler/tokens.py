@@ -13,7 +13,7 @@ class TokenType(StrEnum):
 
 class Token(ABC):
     def __init__(
-            self, lexeme: str, token_type: TokenType = TokenType.UNDEFINED
+        self, lexeme: str, token_type: TokenType = TokenType.UNDEFINED
     ):
         self.token_type = token_type
         regex = self.regular_expression()
@@ -33,7 +33,6 @@ class Token(ABC):
 
 
 class ReservedWordToken(Token):
-
     def __repr__(self):
         return f"<{self.token_type}>"
 

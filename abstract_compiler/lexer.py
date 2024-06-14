@@ -11,11 +11,11 @@ class Lexer:
         tokens.DotToken,
     ]
 
-    NON_LEXEME_CHARS = ['\n', ' ', '\t']
+    NON_LEXEME_CHARS = ["\n", " ", "\t"]
 
-    CONCATENATED_LEXEME_STARTERS = ['.']
+    CONCATENATED_LEXEME_STARTERS = ["."]
 
-    CONCATENATED_LEXEME_ENDERS = ['.']
+    CONCATENATED_LEXEME_ENDERS = ["."]
 
     LEXEME_SEPARATORS = NON_LEXEME_CHARS + CONCATENATED_LEXEME_STARTERS
 
@@ -37,7 +37,6 @@ class Lexer:
         lexeme = ""
         while len(self.char_list) > 0:
             char = self.char_list[0]
-            print(char)
             ignore_separators = False
             for ignore_char in self.SEPARATOR_ENCLOSURES:
                 if lexeme.count(ignore_char) % 2 == 1:
@@ -62,8 +61,8 @@ class Lexer:
 
     def _consume_non_lexeme_chars(self):
         while (
-            len(self.char_list) > 0 and self.char_list[0]
-            in self.NON_LEXEME_CHARS
+            len(self.char_list) > 0
+            and self.char_list[0] in self.NON_LEXEME_CHARS
         ):
             self.char_list.pop(0)
 

@@ -1,4 +1,5 @@
 from enum import StrEnum
+
 from anytree import Node
 
 from . import tokens
@@ -47,9 +48,7 @@ class Parser:
 
     def _column_list(self) -> list[Node]:
         columns = [self._column()]
-        while isinstance(
-            self._get_current_token(), tokens.IdentifierToken
-        ):
+        while isinstance(self._get_current_token(), tokens.IdentifierToken):
             columns.append(self._column())
         return columns
 
