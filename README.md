@@ -49,16 +49,19 @@ SELECT "column1" "column2" FROM "schema1"."table1"
 
 TOKENS
 
-<SELECT> <D1 ID, "column1"> <D1 ID, "column2"> <FROM> <D2 ID, "schema1"."table1">
+<SELECT> <ID, "column1"> <ID, "column2"> <FROM> <ID, "schema1"> <DOT> <ID, "table1">
 
 SYNTAX TREE
 
 SELECT
 ├── <SELECT>
-│   ├── <D1 ID, "column1">
-│   └── <D1 ID, "column2">
+│   ├── <ID, "column1">
+│   └── <ID, "column2">
 └── <FROM>
-    └── <D2 ID, "schema1"."table1">
+    └── TABLE IDENTIFIER
+        ├── <ID, "schema1">
+        ├── <DOT>
+        └── <ID, "table1">
 
 RESULTS
 
