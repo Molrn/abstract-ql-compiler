@@ -61,7 +61,7 @@ class Parser:
         if isinstance(self._get_current_token(), tokens.DotToken):
             Node(self._consume_token(tokens.DotToken), parent=table)
             Node(self._consume_token(tokens.IdentifierToken), parent=table)
-        if isinstance(self._get_current_token(), tokens.DotToken):
-            Node(self._consume_token(tokens.DotToken), parent=table)
-            Node(self._consume_token(tokens.IdentifierToken), parent=table)
+            if isinstance(self._get_current_token(), tokens.DotToken):
+                Node(self._consume_token(tokens.DotToken), parent=table)
+                Node(self._consume_token(tokens.IdentifierToken), parent=table)
         return table

@@ -14,34 +14,41 @@ Result = TypeVar("Result")
 
 
 class AbstractCompiler(ABC, Generic[Table, Result]):
-    def __init__(
-        self, output_stream=stdout, error_stream=stderr, verbose=True
-    ):
-        self.output_stream = output_stream
-        self.error_stream = error_stream
-        self.verbose = verbose
 
-    def execute(self, statement: str) -> Result:
+    def execute(self, statement: str):
+        token_list = Lexer(statement).run()
+        syntax_tree = Parser(token_list).run()
+        return self._execute_statement(syntax_tree)
+
+    def console_execute(
+        self,
+        statement: str,
+        output_stream=stdout,
+        error_stream=stderr,
+        verbose=True
+    ) -> Result:
         try:
-            if self.verbose:
-                self.output_stream.write(f"STATEMENT\n\n{statement}\n\n")
+            if verbose:
+                output_stream.write(f"STATEMENT\n\n{statement}\n\n")
             token_list = Lexer(statement).run()
-            if self.verbose:
+            if verbose:
                 token_str_list = " ".join([str(token) for token in token_list])
-                self.output_stream.write(f"TOKENS\n\n{token_str_list}\n\n")
+                output_stream.write(f"TOKENS\n\n{token_str_list}\n\n")
             syntax_tree = Parser(token_list).run()
-            if self.verbose:
-                self.output_stream.write("SYNTAX TREE\n\n")
+            if verbose:
+                output_stream.write("SYNTAX TREE\n\n")
                 for pre, _, node in RenderTree(syntax_tree):
-                    self.output_stream.write("%s%s\n" % (pre, node.name))
-                self.output_stream.write("\n")
+                    output_stream.write("%s%s\n" % (pre, node.name))
+                output_stream.write("\n")
             results = self._execute_statement(syntax_tree)
-            if self.verbose:
-                self.output_stream.write("RESULTS\n\n")
-                self.display_results(results)
+            if verbose:
+                output_stream.write("RESULTS\n\n")
+                output_stream.write(
+                    self.results_to_str(results)
+                )
             return results
         except CompilationError as e:
-            self.error_stream.write(f"{e}\n")
+            error_stream.write(f"{e}\n")
 
     def _execute_statement(self, statement_root: Node) -> Result:
         if statement_root.name == ComposedNodeType.SELECT:
@@ -94,7 +101,7 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
             raise LogicalError("Unrecognized table identifier")
 
     @abstractmethod
-    def display_results(self, results: Result):
+    def results_to_str(self, results: Result):
         pass
 
     @abstractmethod

@@ -16,8 +16,8 @@ class DictCompiler(AbstractCompiler[Table, Result]):
         with open(data_file_path) as file:
             self.data: dict = json.load(file)
 
-    def display_results(self, results: Result):
-        self.output_stream.write(f"{str(results)}\n")
+    def results_to_str(self, results: Result):
+        return json.dumps(results, indent=4)
 
     def get_table_from_1_id(self, identifier: str) -> Table:
         schema_databases = []

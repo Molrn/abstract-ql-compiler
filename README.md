@@ -17,7 +17,15 @@ pip install -r requirements.txt
 It is then possible to execute statements in the example compiler 
 [DictCompiler](dict_compiler/compiler.py), which relies on the data structure 
 defined in the file [dict_compiler/data.json](dict_compiler/data.json). 
-To execute a statement, use the following command:
+
+### Flask
+To start the flask application, use the command:  
+```
+flask run
+```
+
+### Command Line Interface
+To execute a statement using the CLI, use the following command:
 ```
 python main.py [-h] [--verbose] statement
 ```
@@ -99,4 +107,3 @@ select_statement    ::= <SELECT> column_list <FROM> table
 column_list         ::= <ID> column_list | <ID>
 table               ::= <ID> | <ID> <DOT> <ID> | <ID> <DOT> <ID> <DOT> <ID>
 ```
-

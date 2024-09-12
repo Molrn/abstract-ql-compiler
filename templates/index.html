@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
+        <title>Abstract QL Compiler</title>
+    </head>
+    <body>
+        <textarea id="code-editor"></textarea>
+        <button id="compile-button">Compile</button>
+        <div id="results"></div>
+
+        <script>
+            const editor = CodeMirror.fromTextArea(
+                document.getElementById('code-editor'),
+                { lineNumbers: true },
+            );
+
+            const compileButton =  document.getElementById('compile-button');
+            compileButton.addEventListener('click', () => {
+                const editorContent = editor.getValue('\n');
+                fetch('/api/compile', {
+                    method: "POST",
+                    body: JSON.stringify({statement: editorContent}),
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const resultsElement = document.getElementById('results');
+                            resultsElement.innerHTML = data.results;
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+            });
+        </script>
+    </body>
+</html>
