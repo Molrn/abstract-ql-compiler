@@ -4,6 +4,7 @@ from anytree import Node
 
 from . import tokens
 from .exceptions import SyntacticError
+from .lexeme_locator import LexemeLocator
 from .tokens import Token
 
 
@@ -19,22 +20,21 @@ class Parser:
     def run(self) -> Node:
         return self._statement()
 
-    def _get_current_token(self) -> Token | None:
+    def _peek_next_token(self) -> Token | None:
         if len(self.tokens) == 0:
             return None
-        return self.tokens[0]
 
     def _consume_token(self, token_class: type[Token]) -> Token:
-        token = self._get_current_token()
+        token = self._peek_next_token()
         if token is None:
-            raise SyntacticError("Unexpected end of tokens")
+            eof_locator = LexemeLocator(-1, -1, -1, -1)
+            raise SyntacticError("Unexpected end of tokens", eof_locator)
         if isinstance(token, token_class):
             return self.tokens.pop(0)
-        else:
-            raise SyntacticError(f"Unexpected token: {token.lexeme}")
+        raise SyntacticError(f"Unexpected token: {token.lexeme}", token.locator)
 
     def _statement(self) -> Node:
-        if isinstance(self._get_current_token(), tokens.SelectToken):
+        if isinstance(self._peek_next_token(), tokens.SelectToken):
             return Node(
                 ComposedNodeType.SELECT, children=self._select_statement()
             )
@@ -48,7 +48,7 @@ class Parser:
 
     def _column_list(self) -> list[Node]:
         columns = [self._column()]
-        while isinstance(self._get_current_token(), tokens.IdentifierToken):
+        while isinstance(self._peek_next_token(), tokens.IdentifierToken):
             columns.append(self._column())
         return columns
 
@@ -58,10 +58,10 @@ class Parser:
     def _table(self) -> Node:
         table = Node(ComposedNodeType.TABLE_IDENTIFIER)
         Node(self._consume_token(tokens.IdentifierToken), parent=table)
-        if isinstance(self._get_current_token(), tokens.DotToken):
+        if isinstance(self._peek_next_token(), tokens.DotToken):
             Node(self._consume_token(tokens.DotToken), parent=table)
             Node(self._consume_token(tokens.IdentifierToken), parent=table)
-            if isinstance(self._get_current_token(), tokens.DotToken):
+            if isinstance(self._peek_next_token(), tokens.DotToken):
                 Node(self._consume_token(tokens.DotToken), parent=table)
                 Node(self._consume_token(tokens.IdentifierToken), parent=table)
         return table

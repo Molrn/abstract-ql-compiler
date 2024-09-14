@@ -2,6 +2,8 @@ import re
 from abc import ABC, abstractmethod
 from enum import StrEnum
 
+from abstract_compiler.lexeme_locator import LexemeLocator
+
 
 class TokenType(StrEnum):
     SELECT = "SELECT"
@@ -12,50 +14,46 @@ class TokenType(StrEnum):
 
 
 class Token(ABC):
-    def __init__(
-        self, lexeme: str, token_type: TokenType = TokenType.UNDEFINED
-    ):
-        self.token_type = token_type
-        regex = self.regular_expression()
-        if not re.fullmatch(regex, lexeme):
-            raise ValueError(
-                f"Lexeme '{lexeme}' does not match "
-                f"regular expression '{regex}'"
-            )
+    def __init__(self, lexeme: str, locator: LexemeLocator):
+        self.locator = locator
         self.lexeme = lexeme
 
-    def __repr__(self) -> str:
-        return f"<{self.token_type}, {self.lexeme}>"
+    def is_valid(self) -> bool:
+        return not re.fullmatch(self.regular_expression(), self.lexeme) is None
+
+    @abstractmethod
+    def token_type(self) -> TokenType:
+        pass
 
     @abstractmethod
     def regular_expression(self) -> str:
         pass
 
+    def __repr__(self) -> str:
+        return f"<{self.token_type()}, {self.lexeme}, {self.locator}>"
 
-class ReservedWordToken(Token):
-    def __repr__(self):
-        return f"<{self.token_type}>"
 
+class ReservedWordToken(Token, ABC):
     def regular_expression(self) -> str:
         regular_expression = ""
-        for char in self.token_type:
+        for char in self.token_type():
             regular_expression += f"[{char.upper()}{char.lower()}]"
         return regular_expression
 
 
 class SelectToken(ReservedWordToken):
-    def __init__(self, lexeme):
-        super().__init__(lexeme, TokenType.SELECT)
+    def token_type(self) -> TokenType:
+        return TokenType.SELECT
 
 
 class FromToken(ReservedWordToken):
-    def __init__(self, lexeme):
-        super().__init__(lexeme, TokenType.FROM)
+    def token_type(self) -> TokenType:
+        return TokenType.FROM
 
 
 class IdentifierToken(Token):
-    def __init__(self, lexeme):
-        super().__init__(lexeme, TokenType.ID)
+    def token_type(self) -> TokenType:
+        return TokenType.ID
 
     def regular_expression(self) -> str:
         return '"[^"]*"'
@@ -65,11 +63,8 @@ class IdentifierToken(Token):
 
 
 class DotToken(Token):
-    def __init__(self, lexeme):
-        super().__init__(lexeme, TokenType.DOT)
+    def token_type(self) -> TokenType:
+        return TokenType.DOT
 
     def regular_expression(self) -> str:
         return "\\."
-
-    def __repr__(self):
-        return f"<{self.token_type}>"

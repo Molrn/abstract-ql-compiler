@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from sys import stderr, stdout
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, TextIO
 
 from anytree import Node, RenderTree
 
@@ -15,21 +15,19 @@ Result = TypeVar("Result")
 
 class AbstractCompiler(ABC, Generic[Table, Result]):
 
-    def execute(self, statement: str):
+    def execute(self, statement: TextIO):
         token_list = Lexer(statement).run()
         syntax_tree = Parser(token_list).run()
         return self._execute_statement(syntax_tree)
 
     def console_execute(
         self,
-        statement: str,
+        statement: TextIO,
         output_stream=stdout,
         error_stream=stderr,
         verbose=True
     ) -> Result:
         try:
-            if verbose:
-                output_stream.write(f"STATEMENT\n\n{statement}\n\n")
             token_list = Lexer(statement).run()
             if verbose:
                 token_str_list = " ".join([str(token) for token in token_list])
@@ -71,7 +69,7 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
     ) -> Result:
         table_id_node = from_node.children[0]
         if table_id_node.name != ComposedNodeType.TABLE_IDENTIFIER:
-            raise LogicalError("Table identifier enpected in FROM clause")
+            raise LogicalError("Table identifier expected in FROM clause")
         table = self._get_table_id_from_node(table_id_node)
         columns = []
         for node in select_node.children:

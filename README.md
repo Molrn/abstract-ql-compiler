@@ -25,13 +25,16 @@ flask run
 ```
 
 ### Command Line Interface
-To execute a statement using the CLI, use the following command:
+To use the CLI, you have to create a file containing the statement to execute. 
+Statement examples can be found in the 
+[dict_compiler/statements/](dict_compiler/statements/) directory.
+Then, execute the following command:
 ```
-python main.py [-h] [--verbose] statement
+python main.py [-h] [--verbose] statement_file
 ```
 Example:
 ```
-python main.py 'SELECT "column2" FROM "schema1"."table1"' --verbose
+python main.py dict_compiler/statements/simple.txt --verbose
 ```
 
 ## How it works   
@@ -57,23 +60,32 @@ SELECT "column1" "column2" FROM "schema1"."table1"
 
 TOKENS
 
-<SELECT> <ID, "column1"> <ID, "column2"> <FROM> <ID, "schema1"> <DOT> <ID, "table1">
+<SELECT, [(1,1),(1,7)]> <ID, "column1", [(1,8),(1,17)]> <ID, "column2", [(1,18),(1,27)]> <FROM, [(1,28),(1,32)]> <ID, "schema1", [(1,33),(1,42)]> <DOT, ., [(1,42),(1,43)]> <ID, "table1", [(1,43),(1,51)]>
 
 SYNTAX TREE
 
 SELECT
-├── <SELECT>
-│   ├── <ID, "column1">
-│   └── <ID, "column2">
-└── <FROM>
+├── <SELECT, [(1,1),(1,7)]>
+│   ├── <ID, "column1", [(1,8),(1,17)]>
+│   └── <ID, "column2", [(1,18),(1,27)]>
+└── <FROM, [(1,28),(1,32)]>
     └── TABLE IDENTIFIER
-        ├── <ID, "schema1">
-        ├── <DOT>
-        └── <ID, "table1">
+        ├── <ID, "schema1", [(1,33),(1,42)]>
+        ├── <DOT, ., [(1,42),(1,43)]>
+        └── <ID, "table1", [(1,43),(1,51)]>
 
 RESULTS
 
-[{'column1': 1, 'column2': 2}, {'column1': 2, 'column2': 1}]
+[
+    {
+        "column1": 1,
+        "column2": 2
+    },
+    {
+        "column1": 2,
+        "column2": 1
+    }
+]
 ```
 
 ## Language definition

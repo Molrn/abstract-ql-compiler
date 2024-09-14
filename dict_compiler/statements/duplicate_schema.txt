@@ -1,0 +1,1 @@
+SELECT "column2" FROM "database1"."duplicate_schema"."duplicate_database_table"

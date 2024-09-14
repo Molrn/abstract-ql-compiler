@@ -8,14 +8,14 @@
       "duplicate_schema_table": [
         {"column1": 1, "column2": 2},
         {"column1": 2, "column2": 1}
-      ],
+      ]
+    },
+    "duplicate_schema": {
+      "duplicate_schema_table": [],
       "duplicate_database_table": [
         {"column1": 1, "column2": 2},
         {"column1": 2, "column2": 1}
       ]
-    },
-    "duplicate_schema": {
-      "duplicate_schema_table": []
     }
   },
   "database2": {
