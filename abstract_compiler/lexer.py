@@ -1,13 +1,13 @@
 from typing import TextIO
 
 from . import tokens
-from .exceptions import CompilerError, LexicalError
+from .exceptions import LexicalError
 from .lexeme_locator import LexemeLocator
-from .tokens import Token
+from .tokens import AbstractToken
 
 
 class Lexer:
-    TOKEN_CLASSES: list[type[Token]] = [
+    TOKEN_CLASSES: list[type[AbstractToken]] = [
         tokens.SelectToken,
         tokens.FromToken,
         tokens.IdentifierToken,
@@ -35,7 +35,7 @@ class Lexer:
         self.lexeme_line_start = 1
         self.lexeme_column_start = 1
 
-    def run(self) -> list[Token]:
+    def analyze(self) -> list[AbstractToken]:
         token_list = []
         while not self._is_eof():
             lexeme = self._get_next_lexeme()
@@ -77,7 +77,7 @@ class Lexer:
         while self._peek_next_char() in self.NON_LEXEME_CHARS:
             self._consume_char()
 
-    def _get_token(self, lexeme: str) -> Token:
+    def _get_token(self, lexeme: str) -> AbstractToken:
         token_locator = LexemeLocator(
             self.lexeme_line_start,
             self.lexeme_column_start,
@@ -100,7 +100,7 @@ class Lexer:
             self.current_line = self.lines[0]
             self.lines.pop(0)
             return self.current_line.pop(0)
-        raise CompilerError("Unexpected End Of File")
+        return ""
 
     def _peek_next_char(self):
         if len(self.current_line) > 0:

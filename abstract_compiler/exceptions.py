@@ -20,11 +20,3 @@ class LexicalError(CompilationError):
 
 class SemanticError(CompilationError):
     pass
-
-
-class LogicalError(CompilationError):
-    pass
-
-
-class CompilerError(Exception):
-    pass

@@ -12,7 +12,7 @@ if __name__ == "__main__":
     compiler = DictCompiler()
     if args.verbose:
         with open(args.statement_file, "r") as file:
-            stdout.write(f"STATEMENT\n\n{file.read()}\n\n")
+            stdout.write(f"STATEMENT\n\n{file.read()}\n")
     with open(args.statement_file, "r") as file:
         results = compiler.console_execute(file, verbose=args.verbose)
         if not args.verbose:

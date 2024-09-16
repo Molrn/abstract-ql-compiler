@@ -13,7 +13,7 @@ class TokenType(StrEnum):
     UNDEFINED = "UNDEFINED"
 
 
-class Token(ABC):
+class AbstractToken(ABC):
     def __init__(self, lexeme: str, locator: LexemeLocator):
         self.locator = locator
         self.lexeme = lexeme
@@ -21,6 +21,7 @@ class Token(ABC):
     def is_valid(self) -> bool:
         return not re.fullmatch(self.regular_expression(), self.lexeme) is None
 
+    @property
     @abstractmethod
     def token_type(self) -> TokenType:
         pass
@@ -30,30 +31,27 @@ class Token(ABC):
         pass
 
     def __repr__(self) -> str:
-        return f"<{self.token_type()}, {self.lexeme}, {self.locator}>"
+        return f"<{self.token_type}, {self.lexeme}, {self.locator}>"
 
 
-class ReservedWordToken(Token, ABC):
+class ReservedWordToken(AbstractToken, ABC):
     def regular_expression(self) -> str:
         regular_expression = ""
-        for char in self.token_type():
+        for char in self.token_type:
             regular_expression += f"[{char.upper()}{char.lower()}]"
         return regular_expression
 
 
 class SelectToken(ReservedWordToken):
-    def token_type(self) -> TokenType:
-        return TokenType.SELECT
+    token_type = TokenType.SELECT
 
 
 class FromToken(ReservedWordToken):
-    def token_type(self) -> TokenType:
-        return TokenType.FROM
+    token_type = TokenType.FROM
 
 
-class IdentifierToken(Token):
-    def token_type(self) -> TokenType:
-        return TokenType.ID
+class IdentifierToken(AbstractToken):
+    token_type = TokenType.ID
 
     def regular_expression(self) -> str:
         return '"[^"]*"'
@@ -62,9 +60,8 @@ class IdentifierToken(Token):
         return self.lexeme[1:-1]
 
 
-class DotToken(Token):
-    def token_type(self) -> TokenType:
-        return TokenType.DOT
+class DotToken(AbstractToken):
+    token_type = TokenType.DOT
 
     def regular_expression(self) -> str:
         return "\\."

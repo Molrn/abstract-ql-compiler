@@ -56,34 +56,33 @@ one. To do so, the abstract methods of the generic class
 ```
 STATEMENT
 
-SELECT "column1" "column2" FROM "schema1"."table1"
+SELECT "column1" FROM "table1"
 
 TOKENS
 
-<SELECT, [(1,1),(1,7)]> <ID, "column1", [(1,8),(1,17)]> <ID, "column2", [(1,18),(1,27)]> <FROM, [(1,28),(1,32)]> <ID, "schema1", [(1,33),(1,42)]> <DOT, ., [(1,42),(1,43)]> <ID, "table1", [(1,43),(1,51)]>
+<SELECT, SELECT, [(1,1),(1,7)]> <ID, "column1", [(1,8),(1,17)]> <FROM, FROM, [(1,18),(1,22)]> <ID, "table1", [(1,23),(1,31)]>
 
 SYNTAX TREE
 
-SELECT
-├── <SELECT, [(1,1),(1,7)]>
-│   ├── <ID, "column1", [(1,8),(1,17)]>
-│   └── <ID, "column2", [(1,18),(1,27)]>
-└── <FROM, [(1,28),(1,32)]>
-    └── TABLE IDENTIFIER
-        ├── <ID, "schema1", [(1,33),(1,42)]>
-        ├── <DOT, ., [(1,42),(1,43)]>
-        └── <ID, "table1", [(1,43),(1,51)]>
+SELECT STATEMENT
+├── SELECT
+│   ├── <SELECT, SELECT, [(1,1),(1,7)]>
+│   └── COLUMN LIST
+│       └── COLUMN
+│           └── <ID, "column1", [(1,8),(1,17)]>
+└── FROM
+    ├── <FROM, FROM, [(1,18),(1,22)]>
+    └── TABLE
+        └── <ID, "table1", [(1,23),(1,31)]>
 
 RESULTS
 
 [
     {
-        "column1": 1,
-        "column2": 2
+        "column1": 1
     },
     {
-        "column1": 2,
-        "column2": 1
+        "column1": 2
     }
 ]
 ```
