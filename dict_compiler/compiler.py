@@ -15,7 +15,7 @@ class DictCompiler(AbstractCompiler[Table, Result]):
     def __init__(
         self, data_file_path: str = "dict_compiler/data.json", *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         with open(data_file_path) as file:
             self.data: dict = json.load(file)
 
@@ -44,16 +44,20 @@ class DictCompiler(AbstractCompiler[Table, Result]):
             if left_id in self.data[database].keys():
                 databases.append(database)
         if len(databases) == 0:
-            raise SemanticError(f"Unknown schema '{left_id}'")
+            raise SemanticError(
+                f"Unknown schema '{left_id}'", self.current_locator
+            )
         if len(databases) > 1:
             raise SemanticError(
                 f"Multiple schemas with name '{left_id}'.\n"
-                "Database name must be provided"
+                "Database name must be provided",
+                self.current_locator
             )
         schema = self.data[databases[0]][left_id]
         if right_id not in schema.keys():
             raise SemanticError(
-                f"Unknown table '{right_id}' in schema '{left_id}'"
+                f"Unknown table '{right_id}' in schema '{left_id}'",
+                self.current_locator,
             )
         return databases[0], left_id, right_id
 
@@ -61,15 +65,19 @@ class DictCompiler(AbstractCompiler[Table, Result]):
         self, left_id: str, middle_id: str, right_id: str
     ) -> Table:
         if left_id not in self.data.keys():
-            raise SemanticError(f"Unknown database '{left_id}'")
+            raise SemanticError(
+                f"Unknown database '{left_id}'", self.current_locator
+            )
         if middle_id not in self.data[left_id].keys():
             raise SemanticError(
-                f"Unknown schema '{middle_id}' in database '{left_id}'"
+                f"Unknown schema '{middle_id}' in database '{left_id}'",
+                self.current_locator,
             )
         if right_id not in self.data[left_id][middle_id].keys():
             raise SemanticError(
                 f"Unknown table '{right_id}' in schema "
-                f"'{middle_id}' of database '{left_id}'"
+                f"'{middle_id}' of database '{left_id}'",
+                self.current_locator,
             )
         return left_id, middle_id, right_id
 
@@ -83,12 +91,17 @@ class DictCompiler(AbstractCompiler[Table, Result]):
             row = {}
             for column in columns:
                 if column not in record.keys():
-                    raise SemanticError(f"Unknown column '{column}'")
+                    raise SemanticError(
+                        f"Unknown column '{column}'",
+                        self.current_locator,
+                    )
                 row[column] = record[column]
             selected.append(row)
         return selected
 
-    def get_quotation_mark_suggestions(self, previous_statement: TextIO):
+    def get_quotation_mark_suggestions(
+        self, previous_statement: TextIO
+    ) -> list[str]:
         lexer = Lexer(previous_statement)
         try:
             lexer.analyze()
@@ -110,6 +123,7 @@ class DictCompiler(AbstractCompiler[Table, Result]):
             return self._get_all_column_names_from_table(table)
         elif parser.current_node.name == NonTerminalNodeType.TABLE:
             return self._get_all_table_ids()
+        return []
 
     def _get_all_table_ids(self):
         table_ids = []

@@ -18,7 +18,12 @@ class LexemeLocator:
         return value
 
     def __repr__(self) -> str:
+        if self.line_start == self.line_end:
+            return (
+                f"at line {self.line_start} from column "
+                f"{self.column_start} to column {self.column_end}"
+            )
         return (
-            f"[({self.line_start},{self.column_start}),"
-            f"({self.line_end},{self.column_end})]"
+            f"from line {self.line_start}, column {self.column_start} "
+            f"to line {self.line_end}, column {self.column_end}"
         )

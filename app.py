@@ -2,9 +2,7 @@ from io import StringIO
 
 from flask import Flask, render_template, request, jsonify
 
-from abstract_compiler.exceptions import CompilationError, SyntacticError
-from abstract_compiler.lexer import Lexer
-from abstract_compiler.parser import Parser, NonTerminalNodeType
+from abstract_compiler.exceptions import CompilationError
 from dict_compiler import DictCompiler
 
 app = Flask(__name__)
@@ -34,7 +32,22 @@ def compile_statement():
         str_results = compiler.results_to_str(results)
         return jsonify({"status": "success", "results": str_results})
     except CompilationError as e:
-        return jsonify({"status": "error", "error": f"{e}"})
+        return jsonify({
+            "status": "error",
+            "error": {
+                "message": f"{e}",
+                "location": {
+                    "from": {
+                        "line": e.location.line_start,
+                        "ch": e.location.column_start,
+                    },
+                    "to": {
+                        "line": e.location.line_end,
+                        "ch": e.location.column_end,
+                    },
+                }
+            }
+        })
 
 
 @app.route("/api/quotation_mark_suggestions", methods=["POST"])

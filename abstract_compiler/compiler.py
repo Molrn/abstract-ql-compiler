@@ -2,18 +2,23 @@ from abc import ABC, abstractmethod
 from sys import stderr, stdout
 from typing import Generic, TypeVar, TextIO
 
-from anytree import Node, RenderTree
+from anytree import Node, RenderTree, PreOrderIter
 
 from . import tokens
 from .exceptions import CompilationError
+from .lexeme_locator import LexemeLocator
 from .lexer import Lexer
 from .parser import Parser
+from .tokens import AbstractToken
 
 Table = TypeVar("Table")
 Result = TypeVar("Result")
 
 
 class AbstractCompiler(ABC, Generic[Table, Result]):
+
+    def __init__(self):
+        self.current_locator: LexemeLocator | None = None
 
     def execute(self, statement: TextIO):
         token_list = Lexer(statement).analyze()
@@ -49,15 +54,32 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
         except CompilationError as e:
             error_stream.write(f"{e}\n")
 
+    def set_current_locator(self, current_node: Node):
+        ordered_tokens = [
+            node.name
+            for node in PreOrderIter(current_node)
+            if isinstance(node.name, AbstractToken)
+        ]
+        start_locator = ordered_tokens[0].locator
+        end_locator = ordered_tokens[-1].locator
+        self.current_locator = LexemeLocator(
+            start_locator.line_start,
+            start_locator.column_start,
+            end_locator.line_end,
+            end_locator.column_end,
+        )
+
     def _execute_statement(self, statement_root: Node) -> Result:
         from_node = statement_root.children[0]
         select_node = statement_root.children[1]
 
         table_node = from_node.children[1]
+        self.set_current_locator(table_node)
         table = self.get_table_from_node(table_node)
 
         columns = []
         column_list_node = select_node.children[1]
+        self.set_current_locator(column_list_node)
         for column_node in column_list_node.children:
             token = column_node.name
             columns.append(token.get_value())
