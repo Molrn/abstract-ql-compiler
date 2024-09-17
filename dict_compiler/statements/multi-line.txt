@@ -1,0 +1,4 @@
+FROM
+    "table1"
+SELECT
+    "column1" "column2"

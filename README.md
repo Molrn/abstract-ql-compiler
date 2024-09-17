@@ -56,24 +56,23 @@ one. To do so, the abstract methods of the generic class
 ```
 STATEMENT
 
-SELECT "column1" FROM "table1"
+FROM "table1" SELECT "column1"
 
 TOKENS
 
-<SELECT, SELECT, [(1,1),(1,7)]> <ID, "column1", [(1,8),(1,17)]> <FROM, FROM, [(1,18),(1,22)]> <ID, "table1", [(1,23),(1,31)]>
+<FROM, FROM, [(1,1),(1,5)]> <ID, "table1", [(1,6),(1,14)]> <SELECT, SELECT, [(1,15),(1,21)]> <ID, "column1", [(1,22),(1,31)]>
 
 SYNTAX TREE
 
 SELECT STATEMENT
-├── SELECT
-│   ├── <SELECT, SELECT, [(1,1),(1,7)]>
-│   └── COLUMN LIST
-│       └── COLUMN
-│           └── <ID, "column1", [(1,8),(1,17)]>
-└── FROM
-    ├── <FROM, FROM, [(1,18),(1,22)]>
-    └── TABLE
-        └── <ID, "table1", [(1,23),(1,31)]>
+├── FROM
+│   ├── <FROM, FROM, [(1,1),(1,5)]>
+│   └── TABLE
+│       └── <ID, "table1", [(1,6),(1,14)]>
+└── SELECT
+    ├── <SELECT, SELECT, [(1,15),(1,21)]>
+    └── COLUMN LIST
+        └── <ID, "column1", [(1,22),(1,31)]>
 
 RESULTS
 
@@ -97,24 +96,24 @@ lower or mixed case.
 ### Statements
 #### Select
 
-Example: `SELECT "column1" "column2" FROM "schema1"."table1"`
+Example: `FROM "schema1"."table1" SELECT "column1" "column2"`
 Clauses:
-- SELECT: list of column ids (depth 1)
 - FROM: id of a table (depth 1, 2 or 3)
+- SELECT: list of column ids (depth 1)
 
 ### Token table
 
 | Token  | Regular expression       |
 |--------|--------------------------|
-| SELECT | case_insensitive(SELECT) |
 | FROM   | case_insensitive(FROM)   |
+| SELECT | case_insensitive(SELECT) |
 | ID     | "[^"]\*"                 |
 | DOT    | \\.                      |
 
 ### Grammar
 ```
 statement           ::= select_statement
-select_statement    ::= <SELECT> column_list <FROM> table 
+select_statement    ::= <FROM> table <SELECT> column_list  
 column_list         ::= <ID> column_list | <ID>
 table               ::= <ID> | <ID> <DOT> <ID> | <ID> <DOT> <ID> <DOT> <ID>
 ```

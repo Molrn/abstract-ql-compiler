@@ -1,7 +1,10 @@
 import json
+from typing import TextIO
 
 from abstract_compiler import AbstractCompiler
-from abstract_compiler.exceptions import SemanticError
+from abstract_compiler.exceptions import SemanticError, SyntacticError, LexicalError
+from abstract_compiler.lexer import Lexer
+from abstract_compiler.parser import Parser, NonTerminalNodeType
 
 Table = tuple[str, str, str]
 Result = list[dict]
@@ -84,3 +87,41 @@ class DictCompiler(AbstractCompiler[Table, Result]):
                 row[column] = record[column]
             selected.append(row)
         return selected
+
+    def get_quotation_mark_suggestions(self, previous_statement: TextIO):
+        lexer = Lexer(previous_statement)
+        try:
+            lexer.analyze()
+        except LexicalError:
+            return []
+
+        parser = Parser(lexer.tokens)
+        try:
+            parser.parse()
+        except SyntacticError:
+            pass
+        if (
+            parser.previous_node.name == NonTerminalNodeType.COLUMN_LIST
+            or parser.current_node.name == NonTerminalNodeType.COLUMN_LIST
+        ):
+            from_node = parser.syntax_tree.children[0]
+            table_node = from_node.children[1]
+            table = self.get_table_from_node(table_node)
+            return self._get_all_column_names_from_table(table)
+        elif parser.current_node.name == NonTerminalNodeType.TABLE:
+            return self._get_all_table_ids()
+
+    def _get_all_table_ids(self):
+        table_ids = []
+        for database in self.data:
+            for schema in self.data[database]:
+                for table in self.data[database][schema]:
+                    table_ids.append(f'{database}"."{schema}"."{table}"')
+        return table_ids
+
+    def _get_all_column_names_from_table(self, table: Table) -> list[str]:
+        (database, schema, table_name) = table
+        table_content = self.data[database][schema][table_name]
+        if len(table_content) == 0:
+            return []
+        return [f'{column}"' for column in table_content[0].keys()]

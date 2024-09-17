@@ -50,23 +50,22 @@ class AbstractCompiler(ABC, Generic[Table, Result]):
             error_stream.write(f"{e}\n")
 
     def _execute_statement(self, statement_root: Node) -> Result:
-        select_node = statement_root.children[0]
-        from_node = statement_root.children[1]
+        from_node = statement_root.children[0]
+        select_node = statement_root.children[1]
 
         table_node = from_node.children[1]
-        table = self._get_table_from_node(table_node)
+        table = self.get_table_from_node(table_node)
 
         columns = []
         column_list_node = select_node.children[1]
         for column_node in column_list_node.children:
-            token_node = column_node.children[0]
-            token = token_node.name
+            token = column_node.name
             columns.append(token.get_value())
         return self.select_columns_from_table(table, columns)
 
-    def _get_table_from_node(self, table_id_node: Node) -> Table:
+    def get_table_from_node(self, table_node: Node) -> Table:
         id_values = []
-        for child in table_id_node.children:
+        for child in table_node.children:
             token = child.name
             if isinstance(token, tokens.IdentifierToken):
                 id_values.append(token.get_value())

@@ -4,6 +4,8 @@
         <meta charset="UTF-8" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/hint/show-hint.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/hint/show-hint.min.css">
         <title>Abstract QL Compiler</title>
     </head>
     <body>
@@ -12,14 +14,43 @@
         <div id="results"></div>
 
         <script>
+            function getQuotationMarkSuggestions() {
+
+            };
+
             const editor = CodeMirror.fromTextArea(
                 document.getElementById('code-editor'),
                 { lineNumbers: true },
             );
+            editor.on("inputRead", function(cm, change) {
+                if (change.text[0] === '"') {
+                    CodeMirror.showHint(cm, async function() {
+                        const cursor = cm.getCursor();
+                        const cursorPosition = CodeMirror.Pos(cursor.line, cursor.ch);
+                        const editorContent = editor.getValue('\n').split('\n');
+                        const response = await fetch('/api/quotation_mark_suggestions', {
+                            method: "POST",
+                            body: JSON.stringify({
+                                statement: editorContent,
+                                cursor_line: cursor.line,
+                                cursor_column: cursor.ch,
+                            }),
+                            headers: {
+                                "Content-type": "application/json; charset=UTF-8"
+                            }
+                        });
+                        const data = await response.json();
+                        return {
+                            list: data,
+                            from: cursorPosition,
+                        };
+                    }, {completeSingle: true});
+                }
+            });
 
             const compileButton =  document.getElementById('compile-button');
             compileButton.addEventListener('click', () => {
-                const editorContent = editor.getValue('\n');
+                const editorContent = editor.getValue('\n').split('\n');
                 fetch('/api/compile', {
                     method: "POST",
                     body: JSON.stringify({statement: editorContent}),

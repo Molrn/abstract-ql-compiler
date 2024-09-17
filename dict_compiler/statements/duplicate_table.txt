@@ -1,1 +1,1 @@
-SELECT "column2" FROM "schema1"."duplicate_schema_table"
+FROM "schema1"."duplicate_schema_table" SELECT "column2"

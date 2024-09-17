@@ -27,21 +27,21 @@ class Lexer:
     def __init__(self, input_stream: TextIO):
         self.lines = [[*line] for line in input_stream.readlines()]
         if len(self.lines) == 0:
-            raise ValueError("Stream can't be empty")
+            self.lines.append([""])
         self.current_line = self.lines[0]
         self.lines.pop(0)
         self.line_count = 1
         self.column_count = 1
         self.lexeme_line_start = 1
         self.lexeme_column_start = 1
+        self.tokens = []
 
     def analyze(self) -> list[AbstractToken]:
-        token_list = []
         while not self._is_eof():
             lexeme = self._get_next_lexeme()
-            token_list.append(self._get_token(lexeme))
+            self.tokens.append(self._get_token(lexeme))
             self._consume_non_lexeme_chars()
-        return token_list
+        return self.tokens
 
     def _get_next_lexeme(self):
         lexeme = ""
